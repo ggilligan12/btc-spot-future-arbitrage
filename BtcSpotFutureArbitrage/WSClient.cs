@@ -16,20 +16,22 @@ namespace BtcSpotFutureArbitrage {
     public class WSClient : IDisposable
     {
 
-    	private ClientWebSocket WS;
-        private CancellationTokenSource CTS;
+    	private ClientWebSocket? WS;
+        private CancellationTokenSource? CTS;
 
         public int ReceiveBufferSize { get; set; } = 8192;
 
         public async Task ConnectAsync(string url)
         {
-            if (WS != null)
+            if (WS is not null)
             {
+                // A connection is already open. Return.
                 if (WS.State == WebSocketState.Open) return;
+                // Out with the old.
                 else WS.Dispose();
             }
             WS = new ClientWebSocket();
-            if (CTS != null) CTS.Dispose();
+            if (CTS is not null) CTS.Dispose();
             CTS = new CancellationTokenSource();
             await WS.ConnectAsync(new Uri(url), CTS.Token);
             await Task.Factory.StartNew(ReceiveLoop, CTS.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -37,7 +39,7 @@ namespace BtcSpotFutureArbitrage {
 
         public async Task DisconnectAsync()
         {
-            if (WS is null) return;
+            if (WS is null || CTS is null) return;
             // TODO: requests cleanup code, sub-protocol dependent.
             if (WS.State == WebSocketState.Open)
             {
@@ -47,15 +49,17 @@ namespace BtcSpotFutureArbitrage {
             }
             WS.Dispose();
             WS = null;
-            CTS.Dispose();
+            if (CTS is not null) CTS.Dispose();
             CTS = null;
         }
 
         private async Task ReceiveLoop()
         {
+            // TODO: Handle the event of the WS/CTS being null better
+            if (WS is null || CTS is null) return;
             var loopToken = CTS.Token;
-            MemoryStream outputStream = null;
-            WebSocketReceiveResult receiveResult = null;
+            MemoryStream? outputStream = null;
+            WebSocketReceiveResult? receiveResult = null;
             var buffer = new byte[ReceiveBufferSize];
             try
             {
@@ -89,6 +93,7 @@ namespace BtcSpotFutureArbitrage {
 
         public async Task SendMessageAsync(string message)
         {
+            if (WS is null) return;
         	ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
         	await WS.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
         }
