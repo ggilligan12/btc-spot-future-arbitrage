@@ -7,13 +7,14 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BtcSpotFutureArbitrage {
+namespace BtcSpotFutureArbitrage
+{
 
 	/*
 	Significant credit due to the author of this SO answer:
 	https://stackoverflow.com/questions/30523478/connecting-to-websocket-using-c-sharp-i-can-connect-using-javascript-but-c-sha
 	*/
-    public class WSClient : IDisposable
+    public class WSClientSingleton : IDisposable
     {
 
     	private ClientWebSocket? WS;
@@ -84,12 +85,6 @@ namespace BtcSpotFutureArbitrage {
                 outputStream?.Dispose();
             }
         }
-
-        /*
-        private async Task<ResponseType> SendMessageAsync<RequestType>(RequestType message) {
-            // TODO: handle serializing requests and deserializing responses, handle matching responses to the requests.
-        }
-        */
 
         public async Task SendMessageAsync(string message)
         {
