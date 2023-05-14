@@ -97,6 +97,10 @@ namespace BtcSpotFutureArbitrage
         {
             // TODO: handle deserializing responses and matching them to the requests.
             // IMPORTANT: DON'T FORGET TO DISPOSE THE inputStream!
+            var buffer = new byte[ReceiveBufferSize];
+            inputStream.Read(buffer, 0, ReceiveBufferSize-1);
+            var response = Encoding.UTF8.GetString(buffer);
+            Console.WriteLine(response);
         }
 
         public void Dispose() => DisconnectAsync().Wait();
